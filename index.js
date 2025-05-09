@@ -68,3 +68,43 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+
+require('dotenv').config();
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.use(express.json());
+
+// ✅ Webhook Verification Route
+app.get('/webhook', (req, res) => {
+  const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  if (mode && token) {
+    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+      console.log("✅ Webhook verified");
+      res.status(200).send(challenge);
+    } else {
+      console.log("❌ Token mismatch");
+      res.sendStatus(403);
+    }
+  } else {
+    res.sendStatus(400);
+  }
+});
+
+// ✉️ POST route to receive messages (optional for now)
+app.post('/webhook', (req, res) => {
+  console.log('📩 Incoming Message:', JSON.stringify(req.body, null, 2));
+  res.sendStatus(200);
+});
+
+app.listen(port, () => {
+  console.log(`🚀 Server listening at http://localhost:${port}`);
+});
+
